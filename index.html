@@ -169,4 +169,424 @@ scene.add(house);
 
 const wallMat = new THREE.MeshStandardMaterial({ color: 0xf5efe4, roughness: 0.9 });
 const roofMat = new THREE.MeshStandardMaterial({ color: 0x2f3e52 });
-const frameMat
+const frameMat = new THREE.MeshStandardMaterial({ color: 0x1f2937 });
+const winMat = new THREE.MeshStandardMaterial({ color: 0xfff0b0, emissive: 0xffd36b, emissiveIntensity: 0.8 });
+const glassMat = new THREE.MeshStandardMaterial({
+  color: 0xbfeaff, transparent: true, opacity: 0.15,
+  roughness: 0.05, depthWrite: false, side: THREE.DoubleSide
+});
+const floorColors = [0xdfe7ec, 0xc49a6c, 0xa9c4de];
+
+function mesh(geo, mat, x, y, z, parent = house) {
+  const m = new THREE.Mesh(geo, mat);
+  m.position.set(x, y, z);
+  parent.add(m);
+  return m;
+}
+function addWindow(x, y, z, ry) {
+  const m = mesh(new THREE.PlaneGeometry(0.9, 1.1), winMat, x, y, z);
+  m.rotation.y = ry;
+}
+
+for (let i = 0; i < FLOORS; i++) {
+  const y0 = i * FH;
+  // пол этажа
+  mesh(new THREE.BoxGeometry(W, T, D), new THREE.MeshStandardMaterial({ color: floorColors[i] }), 0, y0, 0);
+  // стены
+  mesh(new THREE.BoxGeometry(W, FH, T), wallMat, 0, y0 + FH / 2, -D / 2 + T / 2);
+  mesh(new THREE.BoxGeometry(T, FH, D), wallMat, -W / 2 + T / 2, y0 + FH / 2, 0);
+  mesh(new THREE.BoxGeometry(T, FH, D), wallMat, W / 2 - T / 2, y0 + FH / 2, 0);
+  // рамка фронта и стекло
+  mesh(new THREE.BoxGeometry(W + 0.1, 0.14, 0.14), frameMat, 0, y0, D / 2);
+  mesh(new THREE.BoxGeometry(0.12, FH, 0.12), frameMat, -W / 2, y0 + FH / 2, D / 2);
+  mesh(new THREE.BoxGeometry(0.12, FH, 0.12), frameMat, W / 2, y0 + FH / 2, D / 2);
+  const glass = mesh(new THREE.PlaneGeometry(W, FH), glassMat, 0, y0 + FH / 2, D / 2 + 0.01);
+  glass.userData.noPick = true;
+  glass.renderOrder = 2;
+  // окна на боковых стенах и сзади
+  addWindow(-W / 2 - 0.01, y0 + FH / 2, 0, -Math.PI / 2);
+  addWindow(W / 2 + 0.01, y0 + FH / 2, 0, Math.PI / 2);
+  addWindow(-0.7, y0 + FH / 2, -D / 2 - 0.01, Math.PI);
+  addWindow(0.7, y0 + FH / 2, -D / 2 - 0.01, Math.PI);
+  // потолочная лампа и свет
+  const lampMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xfff1d0, emissiveIntensity: 1 });
+  mesh(new THREE.SphereGeometry(0.15, 12, 10), lampMat, 0, y0 + FH - 0.35, 0);
+  const pl = new THREE.PointLight(0xffe2b0, 4, 8, 1.2);
+  pl.position.set(0, y0 + FH - 0.35, 0);
+  house.add(pl);
+}
+// крыша и антенна
+mesh(new THREE.BoxGeometry(W, T, D), wallMat, 0, H, 0);
+mesh(new THREE.BoxGeometry(W + 0.3, 0.25, D + 0.3), roofMat, 0, H + 0.12, 0);
+mesh(new THREE.CylinderGeometry(0.03, 0.03, 1, 8), frameMat, 0.8, H + 0.6, 0);
+
+// ====== Мебель: кухня (этаж 0) ======
+const woodMat = new THREE.MeshStandardMaterial({ color: 0x8b6b4a });
+const whiteMat = new THREE.MeshStandardMaterial({ color: 0xf4f4f4 });
+const marbleMat = new THREE.MeshStandardMaterial({ color: 0xeeeeee, roughness: 0.4 });
+const stoveMat = new THREE.MeshStandardMaterial({ color: 0x111111 });
+const steelMat = new THREE.MeshStandardMaterial({ color: 0xbfc5cc, metalness: 0.6, roughness: 0.3 });
+
+{
+  const ft = F(0);
+  const zC = -D / 2 + T + 0.35;
+  mesh(new THREE.BoxGeometry(1.8, 0.87, 0.7), woodMat, -0.35, ft + 0.435, zC);
+  mesh(new THREE.BoxGeometry(1.85, 0.05, 0.74), marbleMat, -0.35, ft + 0.895, zC);
+  mesh(new THREE.BoxGeometry(0.6, 0.02, 0.5), stoveMat, -0.6, ft + 0.92, zC);
+  mesh(new THREE.CylinderGeometry(0.14, 0.14, 0.14, 16), steelMat, -0.6, ft + 0.99, zC);
+  mesh(new THREE.BoxGeometry(0.75, 2.0, 0.7), whiteMat, 1.1, ft + 1.0, zC);
+  mesh(new THREE.BoxGeometry(1.8, 0.6, 0.35), woodMat, -0.35, ft + 2.0, -D / 2 + T + 0.18);
+}
+
+// ====== Мебель: гостиная (этаж 1) ======
+const tvMat = new THREE.MeshStandardMaterial({ color: 0x111111, emissive: 0x3a7bd5, emissiveIntensity: 0.8 });
+const sofaMat = new THREE.MeshStandardMaterial({ color: 0x3d5a80 });
+const darkWood = new THREE.MeshStandardMaterial({ color: 0x3e2c1c });
+{
+  const ft = F(1);
+  const zWall = -D / 2 + T;
+  mesh(new THREE.BoxGeometry(1.4, 0.35, 0.4), darkWood, 0, ft + 0.175, zWall + 0.2);
+  mesh(new THREE.BoxGeometry(1.5, 0.85, 0.05), stoveMat, 0, ft + 0.8, zWall + 0.1);
+  mesh(new THREE.PlaneGeometry(1.36, 0.72), tvMat, 0, ft + 0.8, zWall + 0.135);
+  // диван: сиденье, спинка, подлокотники
+  mesh(new THREE.BoxGeometry(1.9, 0.35, 0.8), sofaMat, 0, ft + 0.175, 0.5);
+  mesh(new THREE.BoxGeometry(1.9, 0.7, 0.18), sofaMat, 0, ft + 0.7, 0.81);
+  mesh(new THREE.BoxGeometry(0.15, 0.5, 0.8), sofaMat, -0.9, ft + 0.25, 0.5);
+  mesh(new THREE.BoxGeometry(0.15, 0.5, 0.8), sofaMat, 0.9, ft + 0.25, 0.5);
+  // растение
+  mesh(new THREE.CylinderGeometry(0.2, 0.16, 0.4, 12), new THREE.MeshStandardMaterial({ color: 0xb5651d }), 1.2, ft + 0.2, -0.6);
+  mesh(new THREE.SphereGeometry(0.35, 12, 10), new THREE.MeshStandardMaterial({ color: 0x2e8b3a, flatShading: true }), 1.2, ft + 0.7, -0.6);
+}
+
+// ====== Мебель: спальня (этаж 2) ======
+const blanketMat = new THREE.MeshStandardMaterial({ color: 0xe76f51 });
+const mattressMat = new THREE.MeshStandardMaterial({ color: 0xf0f4ff });
+{
+  const ft = F(2);
+  // каркас кровати, изголовье, матрас, одеяло, подушка
+  mesh(new THREE.BoxGeometry(1.7, 0.35, 2.2), woodMat, 0, ft + 0.175, -0.04);
+  mesh(new THREE.BoxGeometry(1.7, 0.8, 0.08), woodMat, 0, ft + 0.4, -1.1);
+  mesh(new THREE.BoxGeometry(1.5, 0.2, 2.0), mattressMat, 0, ft + 0.45, -0.04);
+  mesh(new THREE.BoxGeometry(1.52, 0.06, 1.2), blanketMat, 0, ft + 0.58, 0.3);
+  mesh(new THREE.BoxGeometry(0.9, 0.14, 0.35), whiteMat, 0, ft + 0.65, -0.85);
+  // тумбочка с лампой
+  mesh(new THREE.BoxGeometry(0.4, 0.45, 0.4), woodMat, 1.0, ft + 0.225, -0.9);
+  mesh(new THREE.CylinderGeometry(0.08, 0.1, 0.25, 12), steelMat, 1.0, ft + 0.57, -0.9);
+  // шкаф
+  mesh(new THREE.BoxGeometry(1.0, 2.0, 0.5), woodMat, -0.98, ft + 1.0, -0.95);
+}
+
+// ====== Аватары ======
+function makeAvatarMesh(shirtColor) {
+  const root = new THREE.Group();
+  const skin = new THREE.MeshStandardMaterial({ color: 0xf2c9a0 });
+  const cloth = new THREE.MeshStandardMaterial({ color: shirtColor });
+  const pants = new THREE.MeshStandardMaterial({ color: 0x334155 });
+  const hair = new THREE.MeshStandardMaterial({ color: 0x3b2a1a });
+
+  const torso = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.45, 0.22), cloth);
+  torso.position.y = 0.825;
+  root.add(torso);
+
+  const head = new THREE.Group();
+  head.position.y = 1.2;
+  root.add(head);
+  head.add(new THREE.Mesh(new THREE.SphereGeometry(0.17, 16, 12), skin));
+  const hairM = new THREE.Mesh(
+    new THREE.SphereGeometry(0.18, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), hair
+  );
+  hairM.position.y = 0.02;
+  head.add(hairM);
+
+  const legGeo = new THREE.BoxGeometry(0.16, 0.6, 0.18);
+  const armGeo = new THREE.BoxGeometry(0.13, 0.5, 0.13);
+  const mkPivot = (x, y, geo, mat) => {
+    const pv = new THREE.Group();
+    pv.position.set(x, y, 0);
+    root.add(pv);
+    const m = new THREE.Mesh(geo, mat);
+    m.position.y = -geo.parameters.height / 2;
+    pv.add(m);
+    return pv;
+  };
+  const legL = mkPivot(0.11, 0.6, legGeo, pants);
+  const legR = mkPivot(-0.11, 0.6, legGeo, pants);
+  const armL = mkPivot(0.3, 1.02, armGeo, cloth);
+  const armR = mkPivot(-0.3, 1.02, armGeo, cloth);
+
+  return { root, torso, head, legL, legR, armL, armR };
+}
+
+const avatars = [];
+function createAvatar(cfg) {
+  const parts = makeAvatarMesh(cfg.color);
+  scene.add(parts.root);
+  const av = {
+    root: parts.root,
+    parts,                 // ← части тела (исправлено: раньше поле отсутствовало)
+    name: cfg.name,
+    room: cfg.room,
+    path: cfg.path,
+    idx: 0,
+    step: null,
+    t: 0,
+    phase: 0,
+    start: new THREE.Vector3()
+  };
+  parts.root.userData.avatar = av;
+  avatars.push(av);
+  return av;
+}
+
+// Маршруты: walk — ходьба; pose — переход к точке, затем поза на dur секунд
+createAvatar({
+  name: 'Повар', room: 'Кухня', color: 0xffffff,
+  path: [
+    { type: 'walk', to: v(-0.6, F(0), 0.15) },
+    { type: 'pose', pose: 'cook', at: v(-0.6, F(0), 0.15), rot: Math.PI, dur: 8 },
+    { type: 'walk', to: v(0.6, F(0), 0.5) },
+    { type: 'pose', pose: 'stand', at: v(0.6, F(0), 0.5), rot: 0, dur: 3 }
+  ]
+});
+
+createAvatar({
+  name: 'Зритель', room: 'Гостиная', color: 0xe63946,
+  path: [
+    { type: 'walk', to: v(-1.3, F(1), -0.3) },
+    { type: 'pose', pose: 'stand', at: v(-1.3, F(1), -0.3), rot: 0, dur: 2 },
+    { type: 'walk', to: v(0, F(1), -0.2) },
+    { type: 'pose', pose: 'watch', at: v(0, F(1) - 0.1, 0.5), rot: Math.PI, dur: 9 }
+  ]
+});
+
+createAvatar({
+  name: 'Спящий', room: 'Спальня', color: 0x2a9d8f,
+  path: [
+    { type: 'walk', to: v(1.05, F(2), 0.7) },
+    { type: 'pose', pose: 'stand', at: v(1.05, F(2), 0.7), rot: -Math.PI / 2, dur: 2 },
+    { type: 'pose', pose: 'lie', at: v(0, F(2) + 0.67, 0.4), rot: 0, dur: 12 },
+    { type: 'pose', pose: 'stand', at: v(1.05, F(2), 0.7), rot: -Math.PI / 2, dur: 2 }
+  ]
+});
+
+function startStep(av) {
+  av.step = av.path[av.idx];
+  av.t = 0;
+  av.start.copy(av.root.position);
+}
+function nextStep(av) {
+  av.idx = (av.idx + 1) % av.path.length;
+  startStep(av);
+}
+
+function applyPose(av, pose, t) {
+  const P = av.parts;
+  av.root.rotation.x = pose === 'lie' ? -Math.PI / 2 : 0;
+  P.legL.rotation.set(0, 0, 0);
+  P.legR.rotation.set(0, 0, 0);
+  P.armL.rotation.set(0, 0, 0);
+  P.armR.rotation.set(0, 0, 0);
+  P.head.rotation.set(0, 0, 0);
+  P.torso.scale.set(1, 1, 1);
+
+  const ph = av.phase;
+  switch (pose) {
+    case 'walk':
+      P.legL.rotation.x = Math.sin(ph) * 0.6;
+      P.legR.rotation.x = -Math.sin(ph) * 0.6;
+      P.armL.rotation.x = -Math.sin(ph) * 0.5;
+      P.armR.rotation.x = Math.sin(ph) * 0.5;
+      break;
+    case 'stand':
+      P.head.rotation.y = Math.sin(t * 0.6) * 0.35;
+      P.armL.rotation.z = 0.06;
+      P.armR.rotation.z = -0.06;
+      break;
+    case 'sit':
+      P.legL.rotation.x = P.legR.rotation.x = -Math.PI / 2;
+      P.armL.rotation.x = P.armR.rotation.x = -0.4;
+      P.head.rotation.y = Math.sin(t * 0.5) * 0.2;
+      break;
+    case 'watch':
+      P.legL.rotation.x = P.legR.rotation.x = -Math.PI / 2;
+      P.armL.rotation.x = -0.4;
+      P.armR.rotation.x = -0.9;
+      P.head.rotation.y = Math.sin(t * 0.8) * 0.3;
+      break;
+    case 'cook':
+      P.armL.rotation.x = -1.2 + Math.sin(t * 5) * 0.25;
+      P.armR.rotation.x = -1.1 + Math.cos(t * 5) * 0.25;
+      P.head.rotation.x = 0.25;
+      break;
+    case 'lie':
+      P.armL.rotation.z = 0.35;
+      P.armR.rotation.z = -0.35;
+      P.head.rotation.y = Math.sin(t * 0.3) * 0.1;
+      P.torso.scale.y = 1 + Math.sin(t * 2) * 0.02;
+      break;
+  }
+}
+
+function updateAvatar(av, dt, t) {
+  if (!av.step) startStep(av);
+  const s = av.step;
+  const p = av.root.position;
+  av.t += dt;
+  let pose = 'stand';
+
+  if (s.type === 'walk') {
+    const dx = s.to.x - p.x, dz = s.to.z - p.z, d = Math.hypot(dx, dz);
+    if (d < 0.05) {
+      nextStep(av);
+      return;
+    }
+    const sp = Math.min(d, 1.1 * dt);
+    p.x += (dx / d) * sp;
+    p.z += (dz / d) * sp;
+    p.y = s.to.y;
+    av.root.rotation.y = Math.atan2(dx, dz);
+    pose = 'walk';
+  } else {
+    const MOVE = 0.8;
+    if (av.t < MOVE) {
+      const k = av.t / MOVE;
+      p.lerpVectors(av.start, s.at, k);
+      if (Math.abs(s.at.y - av.start.y) > 0.2) p.y += Math.sin(Math.PI * k) * 0.6;
+      const dx = s.at.x - av.start.x, dz = s.at.z - av.start.z;
+      if (Math.hypot(dx, dz) > 0.01) av.root.rotation.y = Math.atan2(dx, dz);
+      pose = 'walk';
+    } else {
+      p.copy(s.at);
+      av.root.rotation.y = s.rot;
+      pose = s.pose;
+      if (av.t > MOVE + s.dur) nextStep(av);
+    }
+  }
+
+  if (pose === 'walk') av.phase += dt * 8;
+  applyPose(av, pose, t);
+}
+
+// ====== Камера: вращение, зум ======
+const target = new THREE.Vector3(0, 4.6, 0);
+let theta = 0.6, phi = 1.15, radius = 24;
+
+function updateCamera() {
+  const sp = Math.sin(phi);
+  camera.position.set(
+    target.x + radius * sp * Math.sin(theta),
+    target.y + radius * Math.cos(phi),
+    target.z + radius * sp * Math.cos(theta)
+  );
+  camera.lookAt(target);
+}
+
+const canvas = renderer.domElement;
+const pointers = new Map();
+let downInfo = null;
+let pinchDist = 0;
+const dist2 = () => {
+  const [a, b] = [...pointers.values()];
+  return Math.hypot(a.x - b.x, a.y - b.y);
+};
+
+canvas.addEventListener('pointerdown', e => {
+  canvas.setPointerCapture(e.pointerId);
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (pointers.size === 1) downInfo = { x: e.clientX, y: e.clientY, t: performance.now(), moved: 0 };
+  if (pointers.size === 2) pinchDist = dist2();
+});
+
+canvas.addEventListener('pointermove', e => {
+  if (!pointers.has(e.pointerId)) return;
+  const prev = pointers.get(e.pointerId);
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (pointers.size === 1) {
+    const dx = e.clientX - prev.x, dy = e.clientY - prev.y;
+    theta -= dx * 0.008;
+    phi = clamp(phi - dy * 0.006, 0.25, 1.45);
+    if (downInfo) downInfo.moved += Math.hypot(dx, dy);
+  } else if (pointers.size === 2) {
+    const d = dist2();
+    if (d > 0) radius = clamp(radius * (pinchDist / d), 8, 45);
+    pinchDist = d;
+  }
+});
+
+function endPointer(e) {
+  const wasSingle = pointers.size === 1;
+  pointers.delete(e.pointerId);
+  if (wasSingle && downInfo && downInfo.moved < 8 && performance.now() - downInfo.t < 500) {
+    handleTap(e.clientX, e.clientY);
+  }
+  if (pointers.size === 0) downInfo = null;
+}
+canvas.addEventListener('pointerup', endPointer);
+canvas.addEventListener('pointercancel', endPointer);
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  radius = clamp(radius * (1 + e.deltaY * 0.001), 8, 45);
+}, { passive: false });
+
+// ====== Клик по аватару и меню ======
+const ray = new THREE.Raycaster();
+const ndc = new THREE.Vector2();
+const menu = document.getElementById('menu');
+const mTitle = document.getElementById('mTitle');
+const bCall = document.getElementById('bCall');
+const bWa = document.getElementById('bWa');
+const bTg = document.getElementById('bTg');
+const bClose = document.getElementById('bClose');
+
+function handleTap(x, y) {
+  ndc.set((x / innerWidth) * 2 - 1, -(y / innerHeight) * 2 + 1);
+  ray.setFromCamera(ndc, camera);
+  const hit = ray.intersectObjects(scene.children, true).find(h => !h.object.userData.noPick);
+  if (!hit) return;
+  let o = hit.object;
+  while (o && !o.userData.avatar) o = o.parent;
+  if (o) openMenu(o.userData.avatar);
+}
+
+function openMenu(av) {
+  mTitle.textContent = `${av.name} · ${av.room}`;
+  bCall.href = `tel:${CONTACT.phone}`;
+  bWa.href = `https://wa.me/${CONTACT.whatsapp}`;
+  bTg.href = `https://t.me/${CONTACT.telegram}`;
+  menu.style.display = 'flex';
+}
+function closeMenu() {
+  menu.style.display = 'none';
+}
+bClose.addEventListener('click', closeMenu);
+menu.addEventListener('click', e => { if (e.target === menu) closeMenu(); });
+
+// ====== Ресайз ======
+window.addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+// ====== Цикл анимации ======
+const clock = new THREE.Clock();
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), 0.05);
+  const t = clock.elapsedTime;
+
+  avatars.forEach(av => updateAvatar(av, dt, t));
+
+  tvMat.emissive.setHSL(0.6 + Math.sin(t * 0.4) * 0.05, 0.7, 0.35);
+  tvMat.emissiveIntensity = 0.7 + Math.sin(t * 6) * 0.15;
+
+  updateCamera();
+  renderer.render(scene, camera);
+}
+updateCamera();
+animate();
+</script>
+</body>
+</html>
