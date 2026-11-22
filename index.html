@@ -3,39 +3,59 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Дом-телефон 3D</title>
+<title>Мой мир 3D</title>
 <style>
-  html,body{margin:0;height:100%;overflow:hidden;background:#bfe3ff;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;touch-action:none;user-select:none;-webkit-user-select:none}
+  html,body{margin:0;height:100%;overflow:hidden;background:#bfe6ff;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;touch-action:none;user-select:none;-webkit-user-select:none}
   canvas{display:block}
-  #hint{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:rgba(0,0,0,.45);color:#fff;padding:8px 14px;border-radius:20px;font-size:13px;pointer-events:none;white-space:nowrap;z-index:5}
-  #menu{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.35);z-index:10}
-  #menu .box{background:#fff;border-radius:18px;padding:20px;width:min(280px,85vw);text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.3)}
-  #menu h3{margin:0 0 14px;font-size:18px;color:#222}
-  #menu a,#menu button{display:block;box-sizing:border-box;width:100%;margin:8px 0;padding:12px;border:0;border-radius:12px;font-size:16px;color:#fff;text-decoration:none;text-align:center;cursor:pointer}
-  #menu .call{background:#34c759}
-  #menu .wa{background:#25d366}
-  #menu .tg{background:#229ed9}
-  #menu .close{background:#e5e5e5;color:#333}
+  #panel{position:fixed;left:10px;top:10px;bottom:10px;width:280px;max-width:86vw;overflow-y:auto;box-sizing:border-box;background:rgba(255,255,255,.95);border-radius:16px;padding:12px 14px 16px;box-shadow:0 6px 24px rgba(0,0,0,.2);color:#222;font-size:14px;z-index:5}
+  #panel h2{font-size:16px;margin:6px 0 4px}
+  #panel h3{font-size:14px;margin:12px 0 6px}
+  #panel label{display:block;margin:8px 0 2px}
+  #panel label span{float:right;color:#666}
+  #panel input[type=range]{width:100%;margin:0}
+  #panel button{width:100%;margin:5px 0;padding:10px;border:0;border-radius:10px;background:#3d8fd6;color:#fff;font-size:14px;cursor:pointer}
+  #panel button.danger{background:#e76f51}
+  #panel button.ghost{background:#e5e5e5;color:#333}
+  #panel ul{list-style:none;padding:0;margin:0;max-height:160px;overflow-y:auto}
+  #panel li{padding:6px 8px;background:#f2f6fa;border-radius:8px;margin:4px 0}
+  #toggle{position:fixed;left:10px;bottom:10px;z-index:6;display:none;padding:10px 16px;border:0;border-radius:12px;background:#3d8fd6;color:#fff;font-size:15px;cursor:pointer}
+  #hint{position:fixed;right:12px;bottom:12px;background:rgba(0,0,0,.45);color:#fff;padding:7px 12px;border-radius:14px;font-size:12px;pointer-events:none;z-index:4}
   #err{position:fixed;left:8px;right:8px;top:8px;background:#b00020;color:#fff;padding:10px;border-radius:10px;font-size:13px;display:none;z-index:20;white-space:pre-wrap;word-break:break-word}
 </style>
 </head>
 <body>
 
-<div id="hint">Крути пальцем · щипок или колесо — приблизить · нажми на человечка</div>
-<div id="err"></div>
+<div id="panel">
+  <button class="ghost" id="hide">Свернуть панель</button>
 
-<div id="menu">
-  <div class="box">
-    <h3 id="mTitle"></h3>
-    <a class="call" id="bCall">Позвонить</a>
-    <a class="wa" id="bWa" target="_blank" rel="noopener">WhatsApp</a>
-    <a class="tg" id="bTg" target="_blank" rel="noopener">Telegram</a>
-    <button class="close" id="bClose">Закрыть</button>
-  </div>
+  <h2>Аватар</h2>
+  <label>Рост <span id="v_h"></span></label>
+  <input type="range" id="s_h" min="0.8" max="1.3" step="0.01" value="1">
+  <label>Размер головы <span id="v_head"></span></label>
+  <input type="range" id="s_head" min="0.7" max="1.5" step="0.01" value="1">
+  <label>Размер глаз <span id="v_eye"></span></label>
+  <input type="range" id="s_eye" min="0.5" max="1.8" step="0.01" value="1">
+  <label>Цвет кожи <span id="v_skin"></span></label>
+  <input type="range" id="s_skin" min="0" max="360" step="1" value="30">
+  <label>Цвет волос <span id="v_hair"></span></label>
+  <input type="range" id="s_hair" min="0" max="360" step="1" value="25">
+  <label>Цвет одежды <span id="v_cloth"></span></label>
+  <input type="range" id="s_cloth" min="0" max="360" step="1" value="210">
+
+  <h2>Гостиная</h2>
+  <button id="addSofa">Добавить диван</button>
+  <button id="addTv">Добавить телевизор</button>
+  <button class="danger" id="removeLast">Убрать последнюю вещь</button>
+
+  <h3>Вещи в комнате</h3>
+  <ul id="list"></ul>
 </div>
 
+<button id="toggle">Меню</button>
+<div id="hint">Крути пальцем · щипок или колесо — приблизить</div>
+<div id="err"></div>
+
 <script>
-  // Показываем ошибки прямо на экране, если что-то пошло не так
   window.addEventListener('error', e => {
     const el = document.getElementById('err');
     el.style.display = 'block';
@@ -44,432 +64,427 @@
   window.addEventListener('unhandledrejection', e => {
     const el = document.getElementById('err');
     el.style.display = 'block';
-    el.textContent = 'Ошибка загрузки: ' + (e.reason && e.reason.message ? e.reason.message : e.reason);
+    el.textContent = 'Ошибка: ' + (e.reason && e.reason.message ? e.reason.message : e.reason);
   });
 </script>
 
 <script type="importmap">
-{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
 </script>
 
 <script type="module">
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-// ====== НАСТРОЙКИ: впишите свои данные ======
-const CONTACT = {
-  phone: '+79000000000',      // для кнопки "Позвонить"
-  whatsapp: '79000000000',    // только цифры, без +
-  telegram: 'your_username'   // ник без @
-};
+// Модели из папки models подключаются по имени файла:
+//   models/sofa.glb  — диван
+//   models/tv.glb    — телевизор
+// Если файла нет, вещь строится из простых фигур.
 
-// ====== Константы дома ======
-const W = 3.2, D = 2.4, FH = 3.2, T = 0.12, FLOORS = 3, H = FH * FLOORS;
-const F = i => i * FH + T / 2;   // уровень пола этажа i (0 = кухня, 1 = гостиная, 2 = спальня)
-const v = (x, y, z) => new THREE.Vector3(x, y, z);
-const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+// ====== Размеры дома ======
+const ROOM = { w: 4.4, d: 3.6 };          // внутренний размер гостиной
+const WALL = 0.2;
+const FH = 3;                              // высота этажа
+const FLOORS = 3;
+const TW = ROOM.w / 2 + WALL;              // половина ширины башни
+const TD = ROOM.d / 2 + WALL;              // половина глубины башни
 
-// ====== Сцена, камера, рендер ======
+// ====== Сцена ======
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xbfe3ff);
-scene.fog = new THREE.Fog(0xbfe3ff, 60, 130);
+scene.background = new THREE.Color(0xbfe6ff);
+scene.fog = new THREE.Fog(0xbfe6ff, 45, 110);
 
-const camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.1, 400);
+const camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.1, 300);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setSize(innerWidth, innerHeight);
 document.body.appendChild(renderer.domElement);
 
-scene.add(new THREE.HemisphereLight(0xffffff, 0x5b7f35, 1.3));
-const sun = new THREE.DirectionalLight(0xffffff, 1.1);
-sun.position.set(14, 25, 12);
+scene.add(new THREE.HemisphereLight(0xfff6e5, 0x6a9a3a, 1.4));
+const sun = new THREE.DirectionalLight(0xfff1d6, 1.5);
+sun.position.set(12, 20, 10);
 scene.add(sun);
 
-// ====== Участок с травой ======
+// ====== Мультяшные материалы ======
+const gradTex = new THREE.DataTexture(new Uint8Array([110, 190, 255]), 3, 1, THREE.RedFormat);
+gradTex.minFilter = gradTex.magFilter = THREE.NearestFilter;
+gradTex.needsUpdate = true;
+const toon = color => new THREE.MeshToonMaterial({ color, gradientMap: gradTex });
+const outlineMat = new THREE.MeshBasicMaterial({ color: 0x1b1b2f, side: THREE.BackSide });
+
+// Добавляет меш; outline=true делает тёмный контур
+function part(geo, mat, parent, x = 0, y = 0, z = 0, outline = true) {
+  const m = new THREE.Mesh(geo, mat);
+  m.position.set(x, y, z);
+  parent.add(m);
+  if (outline) {
+    const o = new THREE.Mesh(geo, outlineMat);
+    o.scale.setScalar(1.04);
+    m.add(o);
+  }
+  return m;
+}
+
+// ====== Земля, трава, дорожка ======
 function grassTexture() {
   const c = document.createElement('canvas');
   c.width = c.height = 256;
   const g = c.getContext('2d');
-  g.fillStyle = '#5fae4a';
+  g.fillStyle = '#7ccf55';
   g.fillRect(0, 0, 256, 256);
-  for (let i = 0; i < 3000; i++) {
-    g.fillStyle = `hsl(${95 + Math.random() * 25},${45 + Math.random() * 25}%,${28 + Math.random() * 25}%)`;
+  for (let i = 0; i < 2500; i++) {
+    g.fillStyle = `hsl(${92 + Math.random() * 25},55%,${45 + Math.random() * 20}%)`;
     g.fillRect(Math.random() * 256, Math.random() * 256, 2, 3 + Math.random() * 4);
   }
   const t = new THREE.CanvasTexture(c);
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
-  t.repeat.set(30, 30);
+  t.repeat.set(24, 24);
   t.colorSpace = THREE.SRGBColorSpace;
   return t;
 }
 const ground = new THREE.Mesh(
-  new THREE.PlaneGeometry(140, 140),
-  new THREE.MeshStandardMaterial({ map: grassTexture() })
+  new THREE.PlaneGeometry(120, 120),
+  new THREE.MeshToonMaterial({ map: grassTexture() })
 );
 ground.rotation.x = -Math.PI / 2;
 scene.add(ground);
 
-// дорожка к дому
-const pathMesh = new THREE.Mesh(
-  new THREE.BoxGeometry(1.4, 0.02, 7),
-  new THREE.MeshStandardMaterial({ color: 0xd8c8a0 })
-);
-pathMesh.position.set(0, 0.02, D / 2 + 3.5);
-scene.add(pathMesh);
+part(new THREE.BoxGeometry(1.6, 0.02, 10), toon(0xe9d6a6), scene, 0, 0.01, 7, false);
 
 // ====== Деревья и кусты ======
+const trunkMat = toon(0x8a5a33);
+const leafA = toon(0x4caf50);
+const leafB = toon(0x66c46a);
+const bushMat = toon(0x58b85c);
+
 function makeTree(x, z, s) {
   const g = new THREE.Group();
-  const trunk = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.18 * s, 0.25 * s, 1.8 * s, 8),
-    new THREE.MeshStandardMaterial({ color: 0x7a5230 })
-  );
-  trunk.position.y = 0.9 * s;
-  g.add(trunk);
-  const leaves = new THREE.Mesh(
-    new THREE.IcosahedronGeometry(1.3 * s, 1),
-    new THREE.MeshStandardMaterial({ color: 0x2e8b3a, flatShading: true })
-  );
-  leaves.position.y = 2.6 * s;
-  g.add(leaves);
   g.position.set(x, 0, z);
+  g.rotation.y = Math.random() * 6;
+  part(new THREE.CylinderGeometry(0.2 * s, 0.28 * s, 1.6 * s, 10), trunkMat, g, 0, 0.8 * s, 0);
+  part(new THREE.IcosahedronGeometry(1.2 * s, 1), leafA, g, 0, 2.3 * s, 0);
+  part(new THREE.IcosahedronGeometry(0.8 * s, 1), leafB, g, 0.5 * s, 3 * s, 0.2 * s);
   scene.add(g);
 }
 function makeBush(x, z, s) {
-  const m = new THREE.Mesh(
-    new THREE.SphereGeometry(0.6 * s, 12, 10),
-    new THREE.MeshStandardMaterial({ color: 0x3f9a45, flatShading: true })
-  );
-  m.position.set(x, 0.4 * s, z);
-  m.scale.y = 0.8;
-  scene.add(m);
+  const m = part(new THREE.SphereGeometry(0.6 * s, 14, 10), bushMat, scene, x, 0.3 * s, z);
+  m.scale.set(1, 0.8, 1);
 }
 function freeSpot() {
   let x, z;
   do {
-    x = (Math.random() - 0.5) * 46;
-    z = (Math.random() - 0.5) * 46;
+    x = (Math.random() - 0.5) * 48;
+    z = (Math.random() - 0.5) * 48;
   } while (
-    (Math.abs(x) < 3.4 && Math.abs(z) < 3.4) ||
-    (Math.abs(x) < 1.6 && z > 0)
+    Math.hypot(x, z) < 4 ||
+    (Math.abs(x) < 3 && Math.abs(z) < 3.5) ||
+    (Math.abs(x) < 1.7 && z > 0)
   );
   return [x, z];
 }
-for (let i = 0; i < 16; i++) {
+for (let i = 0; i < 14; i++) {
   const [x, z] = freeSpot();
   makeTree(x, z, 0.8 + Math.random() * 0.6);
 }
-for (let i = 0; i < 34; i++) {
+for (let i = 0; i < 30; i++) {
   const [x, z] = freeSpot();
   makeBush(x, z, 0.5 + Math.random() * 0.5);
 }
 
-// ====== Дом-телефон ======
-const house = new THREE.Group();
-scene.add(house);
+// ====== Дом-башня (гостиная на первом этаже, открыта спереди) ======
+const tower = new THREE.Group();   // сюда же добавляются вещи и аватар
+scene.add(tower);
 
-const wallMat = new THREE.MeshStandardMaterial({ color: 0xf5efe4, roughness: 0.9 });
-const roofMat = new THREE.MeshStandardMaterial({ color: 0x2f3e52 });
-const frameMat = new THREE.MeshStandardMaterial({ color: 0x1f2937 });
-const winMat = new THREE.MeshStandardMaterial({ color: 0xfff0b0, emissive: 0xffd36b, emissiveIntensity: 0.8 });
-const glassMat = new THREE.MeshStandardMaterial({
-  color: 0xbfeaff, transparent: true, opacity: 0.15,
-  roughness: 0.05, depthWrite: false, side: THREE.DoubleSide
-});
-const floorColors = [0xdfe7ec, 0xc49a6c, 0xa9c4de];
+const WALL_MAT = toon(0xfff3e0);
+const SLAB = toon(0xd9c3a5);
+const WOOD = toon(0xe8b98a);
+const ROOF = toon(0xe26a4f);
+const WIN = new THREE.MeshBasicMaterial({ color: 0xffe9a8 });
 
-function mesh(geo, mat, x, y, z, parent = house) {
-  const m = new THREE.Mesh(geo, mat);
-  m.position.set(x, y, z);
-  parent.add(m);
-  return m;
-}
-function addWindow(x, y, z, ry) {
-  const m = mesh(new THREE.PlaneGeometry(0.9, 1.1), winMat, x, y, z);
-  m.rotation.y = ry;
-}
+part(new THREE.BoxGeometry(2 * TW - 0.2, 0.1, 2 * TD - 0.2), WOOD, tower, 0, 0.05, 0, false);
 
 for (let i = 0; i < FLOORS; i++) {
-  const y0 = i * FH;
-  // пол этажа
-  mesh(new THREE.BoxGeometry(W, T, D), new THREE.MeshStandardMaterial({ color: floorColors[i] }), 0, y0, 0);
-  // стены
-  mesh(new THREE.BoxGeometry(W, FH, T), wallMat, 0, y0 + FH / 2, -D / 2 + T / 2);
-  mesh(new THREE.BoxGeometry(T, FH, D), wallMat, -W / 2 + T / 2, y0 + FH / 2, 0);
-  mesh(new THREE.BoxGeometry(T, FH, D), wallMat, W / 2 - T / 2, y0 + FH / 2, 0);
-  // рамка фронта и стекло
-  mesh(new THREE.BoxGeometry(W + 0.1, 0.14, 0.14), frameMat, 0, y0, D / 2);
-  mesh(new THREE.BoxGeometry(0.12, FH, 0.12), frameMat, -W / 2, y0 + FH / 2, D / 2);
-  mesh(new THREE.BoxGeometry(0.12, FH, 0.12), frameMat, W / 2, y0 + FH / 2, D / 2);
-  const glass = mesh(new THREE.PlaneGeometry(W, FH), glassMat, 0, y0 + FH / 2, D / 2 + 0.01);
-  glass.userData.noPick = true;
-  glass.renderOrder = 2;
-  // окна на боковых стенах и сзади
-  addWindow(-W / 2 - 0.01, y0 + FH / 2, 0, -Math.PI / 2);
-  addWindow(W / 2 + 0.01, y0 + FH / 2, 0, Math.PI / 2);
-  addWindow(-0.7, y0 + FH / 2, -D / 2 - 0.01, Math.PI);
-  addWindow(0.7, y0 + FH / 2, -D / 2 - 0.01, Math.PI);
-  // потолочная лампа и свет
-  const lampMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xfff1d0, emissiveIntensity: 1 });
-  mesh(new THREE.SphereGeometry(0.15, 12, 10), lampMat, 0, y0 + FH - 0.35, 0);
-  const pl = new THREE.PointLight(0xffe2b0, 4, 8, 1.2);
-  pl.position.set(0, y0 + FH - 0.35, 0);
-  house.add(pl);
-}
-// крыша и антенна
-mesh(new THREE.BoxGeometry(W, T, D), wallMat, 0, H, 0);
-mesh(new THREE.BoxGeometry(W + 0.3, 0.25, D + 0.3), roofMat, 0, H + 0.12, 0);
-mesh(new THREE.CylinderGeometry(0.03, 0.03, 1, 8), frameMat, 0.8, H + 0.6, 0);
-
-// ====== Мебель: кухня (этаж 0) ======
-const woodMat = new THREE.MeshStandardMaterial({ color: 0x8b6b4a });
-const whiteMat = new THREE.MeshStandardMaterial({ color: 0xf4f4f4 });
-const marbleMat = new THREE.MeshStandardMaterial({ color: 0xeeeeee, roughness: 0.4 });
-const stoveMat = new THREE.MeshStandardMaterial({ color: 0x111111 });
-const steelMat = new THREE.MeshStandardMaterial({ color: 0xbfc5cc, metalness: 0.6, roughness: 0.3 });
-
-{
-  const ft = F(0);
-  const zC = -D / 2 + T + 0.35;
-  mesh(new THREE.BoxGeometry(1.8, 0.87, 0.7), woodMat, -0.35, ft + 0.435, zC);
-  mesh(new THREE.BoxGeometry(1.85, 0.05, 0.74), marbleMat, -0.35, ft + 0.895, zC);
-  mesh(new THREE.BoxGeometry(0.6, 0.02, 0.5), stoveMat, -0.6, ft + 0.92, zC);
-  mesh(new THREE.CylinderGeometry(0.14, 0.14, 0.14, 16), steelMat, -0.6, ft + 0.99, zC);
-  mesh(new THREE.BoxGeometry(0.75, 2.0, 0.7), whiteMat, 1.1, ft + 1.0, zC);
-  mesh(new THREE.BoxGeometry(1.8, 0.6, 0.35), woodMat, -0.35, ft + 2.0, -D / 2 + T + 0.18);
-}
-
-// ====== Мебель: гостиная (этаж 1) ======
-const tvMat = new THREE.MeshStandardMaterial({ color: 0x111111, emissive: 0x3a7bd5, emissiveIntensity: 0.8 });
-const sofaMat = new THREE.MeshStandardMaterial({ color: 0x3d5a80 });
-const darkWood = new THREE.MeshStandardMaterial({ color: 0x3e2c1c });
-{
-  const ft = F(1);
-  const zWall = -D / 2 + T;
-  mesh(new THREE.BoxGeometry(1.4, 0.35, 0.4), darkWood, 0, ft + 0.175, zWall + 0.2);
-  mesh(new THREE.BoxGeometry(1.5, 0.85, 0.05), stoveMat, 0, ft + 0.8, zWall + 0.1);
-  mesh(new THREE.PlaneGeometry(1.36, 0.72), tvMat, 0, ft + 0.8, zWall + 0.135);
-  // диван: сиденье, спинка, подлокотники
-  mesh(new THREE.BoxGeometry(1.9, 0.35, 0.8), sofaMat, 0, ft + 0.175, 0.5);
-  mesh(new THREE.BoxGeometry(1.9, 0.7, 0.18), sofaMat, 0, ft + 0.7, 0.81);
-  mesh(new THREE.BoxGeometry(0.15, 0.5, 0.8), sofaMat, -0.9, ft + 0.25, 0.5);
-  mesh(new THREE.BoxGeometry(0.15, 0.5, 0.8), sofaMat, 0.9, ft + 0.25, 0.5);
-  // растение
-  mesh(new THREE.CylinderGeometry(0.2, 0.16, 0.4, 12), new THREE.MeshStandardMaterial({ color: 0xb5651d }), 1.2, ft + 0.2, -0.6);
-  mesh(new THREE.SphereGeometry(0.35, 12, 10), new THREE.MeshStandardMaterial({ color: 0x2e8b3a, flatShading: true }), 1.2, ft + 0.7, -0.6);
-}
-
-// ====== Мебель: спальня (этаж 2) ======
-const blanketMat = new THREE.MeshStandardMaterial({ color: 0xe76f51 });
-const mattressMat = new THREE.MeshStandardMaterial({ color: 0xf0f4ff });
-{
-  const ft = F(2);
-  // каркас кровати, изголовье, матрас, одеяло, подушка
-  mesh(new THREE.BoxGeometry(1.7, 0.35, 2.2), woodMat, 0, ft + 0.175, -0.04);
-  mesh(new THREE.BoxGeometry(1.7, 0.8, 0.08), woodMat, 0, ft + 0.4, -1.1);
-  mesh(new THREE.BoxGeometry(1.5, 0.2, 2.0), mattressMat, 0, ft + 0.45, -0.04);
-  mesh(new THREE.BoxGeometry(1.52, 0.06, 1.2), blanketMat, 0, ft + 0.58, 0.3);
-  mesh(new THREE.BoxGeometry(0.9, 0.14, 0.35), whiteMat, 0, ft + 0.65, -0.85);
-  // тумбочка с лампой
-  mesh(new THREE.BoxGeometry(0.4, 0.45, 0.4), woodMat, 1.0, ft + 0.225, -0.9);
-  mesh(new THREE.CylinderGeometry(0.08, 0.1, 0.25, 12), steelMat, 1.0, ft + 0.57, -0.9);
-  // шкаф
-  mesh(new THREE.BoxGeometry(1.0, 2.0, 0.5), woodMat, -0.98, ft + 1.0, -0.95);
-}
-
-// ====== Аватары ======
-function makeAvatarMesh(shirtColor) {
-  const root = new THREE.Group();
-  const skin = new THREE.MeshStandardMaterial({ color: 0xf2c9a0 });
-  const cloth = new THREE.MeshStandardMaterial({ color: shirtColor });
-  const pants = new THREE.MeshStandardMaterial({ color: 0x334155 });
-  const hair = new THREE.MeshStandardMaterial({ color: 0x3b2a1a });
-
-  const torso = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.45, 0.22), cloth);
-  torso.position.y = 0.825;
-  root.add(torso);
-
-  const head = new THREE.Group();
-  head.position.y = 1.2;
-  root.add(head);
-  head.add(new THREE.Mesh(new THREE.SphereGeometry(0.17, 16, 12), skin));
-  const hairM = new THREE.Mesh(
-    new THREE.SphereGeometry(0.18, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), hair
-  );
-  hairM.position.y = 0.02;
-  head.add(hairM);
-
-  const legGeo = new THREE.BoxGeometry(0.16, 0.6, 0.18);
-  const armGeo = new THREE.BoxGeometry(0.13, 0.5, 0.13);
-  const mkPivot = (x, y, geo, mat) => {
-    const pv = new THREE.Group();
-    pv.position.set(x, y, 0);
-    root.add(pv);
-    const m = new THREE.Mesh(geo, mat);
-    m.position.y = -geo.parameters.height / 2;
-    pv.add(m);
-    return pv;
-  };
-  const legL = mkPivot(0.11, 0.6, legGeo, pants);
-  const legR = mkPivot(-0.11, 0.6, legGeo, pants);
-  const armL = mkPivot(0.3, 1.02, armGeo, cloth);
-  const armR = mkPivot(-0.3, 1.02, armGeo, cloth);
-
-  return { root, torso, head, legL, legR, armL, armR };
-}
-
-const avatars = [];
-function createAvatar(cfg) {
-  const parts = makeAvatarMesh(cfg.color);
-  scene.add(parts.root);
-  const av = {
-    root: parts.root,
-    parts,                 // ← части тела (исправлено: раньше поле отсутствовало)
-    name: cfg.name,
-    room: cfg.room,
-    path: cfg.path,
-    idx: 0,
-    step: null,
-    t: 0,
-    phase: 0,
-    start: new THREE.Vector3()
-  };
-  parts.root.userData.avatar = av;
-  avatars.push(av);
-  return av;
-}
-
-// Маршруты: walk — ходьба; pose — переход к точке, затем поза на dur секунд
-createAvatar({
-  name: 'Повар', room: 'Кухня', color: 0xffffff,
-  path: [
-    { type: 'walk', to: v(-0.6, F(0), 0.15) },
-    { type: 'pose', pose: 'cook', at: v(-0.6, F(0), 0.15), rot: Math.PI, dur: 8 },
-    { type: 'walk', to: v(0.6, F(0), 0.5) },
-    { type: 'pose', pose: 'stand', at: v(0.6, F(0), 0.5), rot: 0, dur: 3 }
-  ]
-});
-
-createAvatar({
-  name: 'Зритель', room: 'Гостиная', color: 0xe63946,
-  path: [
-    { type: 'walk', to: v(-1.3, F(1), -0.3) },
-    { type: 'pose', pose: 'stand', at: v(-1.3, F(1), -0.3), rot: 0, dur: 2 },
-    { type: 'walk', to: v(0, F(1), -0.2) },
-    { type: 'pose', pose: 'watch', at: v(0, F(1) - 0.1, 0.5), rot: Math.PI, dur: 9 }
-  ]
-});
-
-createAvatar({
-  name: 'Спящий', room: 'Спальня', color: 0x2a9d8f,
-  path: [
-    { type: 'walk', to: v(1.05, F(2), 0.7) },
-    { type: 'pose', pose: 'stand', at: v(1.05, F(2), 0.7), rot: -Math.PI / 2, dur: 2 },
-    { type: 'pose', pose: 'lie', at: v(0, F(2) + 0.67, 0.4), rot: 0, dur: 12 },
-    { type: 'pose', pose: 'stand', at: v(1.05, F(2), 0.7), rot: -Math.PI / 2, dur: 2 }
-  ]
-});
-
-function startStep(av) {
-  av.step = av.path[av.idx];
-  av.t = 0;
-  av.start.copy(av.root.position);
-}
-function nextStep(av) {
-  av.idx = (av.idx + 1) % av.path.length;
-  startStep(av);
-}
-
-function applyPose(av, pose, t) {
-  const P = av.parts;
-  av.root.rotation.x = pose === 'lie' ? -Math.PI / 2 : 0;
-  P.legL.rotation.set(0, 0, 0);
-  P.legR.rotation.set(0, 0, 0);
-  P.armL.rotation.set(0, 0, 0);
-  P.armR.rotation.set(0, 0, 0);
-  P.head.rotation.set(0, 0, 0);
-  P.torso.scale.set(1, 1, 1);
-
-  const ph = av.phase;
-  switch (pose) {
-    case 'walk':
-      P.legL.rotation.x = Math.sin(ph) * 0.6;
-      P.legR.rotation.x = -Math.sin(ph) * 0.6;
-      P.armL.rotation.x = -Math.sin(ph) * 0.5;
-      P.armR.rotation.x = Math.sin(ph) * 0.5;
-      break;
-    case 'stand':
-      P.head.rotation.y = Math.sin(t * 0.6) * 0.35;
-      P.armL.rotation.z = 0.06;
-      P.armR.rotation.z = -0.06;
-      break;
-    case 'sit':
-      P.legL.rotation.x = P.legR.rotation.x = -Math.PI / 2;
-      P.armL.rotation.x = P.armR.rotation.x = -0.4;
-      P.head.rotation.y = Math.sin(t * 0.5) * 0.2;
-      break;
-    case 'watch':
-      P.legL.rotation.x = P.legR.rotation.x = -Math.PI / 2;
-      P.armL.rotation.x = -0.4;
-      P.armR.rotation.x = -0.9;
-      P.head.rotation.y = Math.sin(t * 0.8) * 0.3;
-      break;
-    case 'cook':
-      P.armL.rotation.x = -1.2 + Math.sin(t * 5) * 0.25;
-      P.armR.rotation.x = -1.1 + Math.cos(t * 5) * 0.25;
-      P.head.rotation.x = 0.25;
-      break;
-    case 'lie':
-      P.armL.rotation.z = 0.35;
-      P.armR.rotation.z = -0.35;
-      P.head.rotation.y = Math.sin(t * 0.3) * 0.1;
-      P.torso.scale.y = 1 + Math.sin(t * 2) * 0.02;
-      break;
+  const hc = i * FH + FH / 2;
+  part(new THREE.BoxGeometry(2 * TW, FH, WALL), WALL_MAT, tower, 0, hc, -TD + WALL / 2);
+  part(new THREE.BoxGeometry(WALL, FH, 2 * TD), WALL_MAT, tower, -TW + WALL / 2, hc, 0);
+  part(new THREE.BoxGeometry(WALL, FH, 2 * TD), WALL_MAT, tower, TW - WALL / 2, hc, 0);
+  if (i > 0) {
+    // передняя стена есть только у верхних этажей, первый этаж открыт
+    part(new THREE.BoxGeometry(2 * TW, FH, WALL), WALL_MAT, tower, 0, hc, TD - WALL / 2);
+    addWin(-1.2, hc, TD + 0.03, 0.9, 1.1, 0.06);
+    addWin(1.2, hc, TD + 0.03, 0.9, 1.1, 0.06);
   }
+  addWin(-1.0, hc, -TD - 0.03, 0.9, 1.1, 0.06);
+  addWin(1.0, hc, -TD - 0.03, 0.9, 1.1, 0.06);
+  addWin(-TW - 0.03, hc, 0.8, 0.06, 1.1, 0.9);
+  addWin(TW + 0.03, hc, 0.8, 0.06, 1.1, 0.9);
+  addWin(-TW - 0.03, hc, -0.8, 0.06, 1.1, 0.9);
+  addWin(TW + 0.03, hc, -0.8, 0.06, 1.1, 0.9);
+}
+// перекрытия между этажами и крыша
+for (let i = 1; i <= FLOORS; i++) {
+  part(new THREE.BoxGeometry(2 * TW + 0.2, 0.15, 2 * TD + 0.2), SLAB, tower, 0, i * FH, 0);
+}
+const roof = part(new THREE.ConeGeometry(3.3, 2.2, 4), ROOF, tower, 0, FLOORS * FH + 1.1, 0);
+roof.rotation.y = Math.PI / 4;
+part(new THREE.SphereGeometry(0.15, 12, 10), toon(0xffd166), tower, 0, FLOORS * FH + 2.3, 0);
+
+function addWin(x, y, z, sx, sy, sz) {
+  part(new THREE.BoxGeometry(sx, sy, sz), WIN, tower, x, y, z);
 }
 
-function updateAvatar(av, dt, t) {
-  if (!av.step) startStep(av);
-  const s = av.step;
-  const p = av.root.position;
-  av.t += dt;
-  let pose = 'stand';
+// Свет внутри гостиной
+const roomLight = new THREE.PointLight(0xffe3b3, 6, 14, 1.5);
+roomLight.position.set(0, 2.6, 0.4);
+tower.add(roomLight);
 
-  if (s.type === 'walk') {
-    const dx = s.to.x - p.x, dz = s.to.z - p.z, d = Math.hypot(dx, dz);
-    if (d < 0.05) {
-      nextStep(av);
-      return;
-    }
-    const sp = Math.min(d, 1.1 * dt);
-    p.x += (dx / d) * sp;
-    p.z += (dz / d) * sp;
-    p.y = s.to.y;
-    av.root.rotation.y = Math.atan2(dx, dz);
-    pose = 'walk';
+// Растение в углу
+part(new THREE.CylinderGeometry(0.25, 0.2, 0.45, 12), toon(0xb5651d), tower, -1.9, 0.22, -1.3);
+part(new THREE.SphereGeometry(0.42, 14, 10), toon(0x3f9a45), tower, -1.9, 0.9, -1.3);
+
+// ====== Вещи: модели или запасные фигуры ======
+const tvScreens = [];
+
+function buildSofa() {
+  const g = new THREE.Group();
+  const m = toon(0x3aa6a0);
+  part(new THREE.BoxGeometry(2, 0.3, 0.9), m, g, 0, 0.35, 0);
+  part(new THREE.BoxGeometry(2, 0.7, 0.22), m, g, 0, 0.7, -0.34);
+  part(new THREE.BoxGeometry(0.25, 0.55, 0.9), m, g, -0.88, 0.55, 0);
+  part(new THREE.BoxGeometry(0.25, 0.55, 0.9), m, g, 0.88, 0.55, 0);
+  part(new THREE.BoxGeometry(1.5, 0.14, 0.6), toon(0x5fc4bd), g, 0, 0.56, 0.1);
+  for (const fx of [-0.85, 0.85]) for (const fz of [-0.3, 0.3]) {
+    part(new THREE.BoxGeometry(0.1, 0.1, 0.1), toon(0x3b2a1a), g, fx, 0.05, fz, false);
+  }
+  return g;
+}
+
+function buildTV() {
+  const g = new THREE.Group();
+  part(new THREE.BoxGeometry(1.2, 0.45, 0.45), toon(0x6b4a2e), g, 0, 0.225, 0);
+  part(new THREE.BoxGeometry(1.3, 0.85, 0.07), toon(0x222222), g, 0, 0.9, 0);
+  const screen = part(new THREE.PlaneGeometry(1.14, 0.7), new THREE.MeshBasicMaterial({ color: 0x4fb3ff }), g, 0, 0.9, 0.05, false);
+  tvScreens.push(screen.material);
+  return g;
+}
+
+const gltfLoader = new GLTFLoader();
+const modelCache = {};
+function loadModel(file) {
+  if (!modelCache[file]) {
+    modelCache[file] = new Promise(resolve => {
+      gltfLoader.load(
+        `models/${file}`,
+        gltf => resolve(gltf.scene),
+        undefined,
+        () => resolve(null)
+      );
+    });
+  }
+  return modelCache[file];
+}
+
+// Подгоняет модель под нужную ширину и ставит её низом на пол
+function fitTo(obj, width) {
+  obj.updateMatrixWorld(true);
+  const size = new THREE.Box3().setFromObject(obj).getSize(new THREE.Vector3());
+  const s = width / Math.max(size.x, size.z, 0.001);
+  obj.scale.multiplyScalar(s);
+  obj.updateMatrixWorld(true);
+  const box = new THREE.Box3().setFromObject(obj);
+  const c = box.getCenter(new THREE.Vector3());
+  obj.position.x -= c.x;
+  obj.position.z -= c.z;
+  obj.position.y -= box.min.y;
+}
+
+const KINDS = {
+  sofa: {
+    title: 'Диван', file: 'sofa.glb', width: 2.0, build: buildSofa,
+    slot: n => ({ x: -0.9, z: -0.5 + n * 1.1, ry: 0 })
+  },
+  tv: {
+    title: 'Телевизор', file: 'tv.glb', width: 1.3, build: buildTV,
+    slot: n => ({ x: 1.2 - n * 1.6, z: -1.45, ry: 0 })
+  }
+};
+
+const items = [];
+const counts = { sofa: 0, tv: 0 };
+
+async function addItem(key) {
+  const kind = KINDS[key];
+  const n = counts[key]++;
+  const slot = kind.slot(n);
+
+  const wrap = new THREE.Group();
+  wrap.position.set(slot.x, 0, slot.z);
+  wrap.rotation.y = slot.ry;
+  tower.add(wrap);
+
+  const item = { key, name: `${kind.title} ${n + 1}`, wrap };
+  items.push(item);
+  renderList();
+
+  const gltf = await loadModel(kind.file);
+  if (!items.includes(item)) return;   // успели удалить, пока грузилось
+
+  let obj;
+  if (gltf) {
+    obj = gltf.clone(true);
+    wrap.add(obj);
+    fitTo(obj, kind.width);
   } else {
-    const MOVE = 0.8;
-    if (av.t < MOVE) {
-      const k = av.t / MOVE;
-      p.lerpVectors(av.start, s.at, k);
-      if (Math.abs(s.at.y - av.start.y) > 0.2) p.y += Math.sin(Math.PI * k) * 0.6;
-      const dx = s.at.x - av.start.x, dz = s.at.z - av.start.z;
-      if (Math.hypot(dx, dz) > 0.01) av.root.rotation.y = Math.atan2(dx, dz);
-      pose = 'walk';
-    } else {
-      p.copy(s.at);
-      av.root.rotation.y = s.rot;
-      pose = s.pose;
-      if (av.t > MOVE + s.dur) nextStep(av);
-    }
+    obj = kind.build();
+    wrap.add(obj);
   }
+}
 
-  if (pose === 'walk') av.phase += dt * 8;
-  applyPose(av, pose, t);
+function removeLast() {
+  const it = items.pop();
+  if (!it) return;
+  tower.remove(it.wrap);
+  counts[it.key]--;
+  renderList();
+}
+
+function renderList() {
+  const ul = document.getElementById('list');
+  ul.innerHTML = '';
+  if (!items.length) {
+    ul.innerHTML = '<li>Пока пусто</li>';
+    return;
+  }
+  items.forEach(it => {
+    const li = document.createElement('li');
+    li.textContent = it.name;
+    ul.appendChild(li);
+  });
+}
+
+document.getElementById('addSofa').onclick = () => addItem('sofa');
+document.getElementById('addTv').onclick = () => addItem('tv');
+document.getElementById('removeLast').onclick = removeLast;
+renderList();
+
+// ====== Аватар ======
+const skinMat = toon(0xf2c9a0);
+const hairMat = toon(0x3b2a1a);
+const clothMat = toon(0x3d8fd6);
+const pantsMat = toon(0x34456b);
+const shoeMat = toon(0x2b2b2b);
+const eyeWhite = toon(0xffffff);
+const pupilMat = toon(0x1a1a1a);
+const mouthMat = toon(0xc0392b);
+const cheekMat = toon(0xff9aa2);
+
+const A = {};
+A.root = new THREE.Group();
+A.root.position.set(0, 0, 1.0);
+tower.add(A.root);
+
+// тень под ногами
+const shadow = new THREE.Mesh(
+  new THREE.CircleGeometry(0.6, 24),
+  new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.22, depthWrite: false })
+);
+shadow.rotation.x = -Math.PI / 2;
+shadow.position.y = 0.01;
+A.root.add(shadow);
+
+A.body = new THREE.Group();
+A.root.add(A.body);
+
+function limb(parent, x, y, geo, mat, offY) {
+  const pv = new THREE.Group();
+  pv.position.set(x, y, 0);
+  parent.add(pv);
+  part(geo, mat, pv, 0, offY, 0);
+  return pv;
+}
+
+// ноги
+A.legL = limb(A.body, -0.17, 0.7, new THREE.CapsuleGeometry(0.13, 0.4, 4, 10), pantsMat, -0.33);
+A.legR = limb(A.body, 0.17, 0.7, new THREE.CapsuleGeometry(0.13, 0.4, 4, 10), pantsMat, -0.33);
+part(new THREE.BoxGeometry(0.2, 0.1, 0.28), shoeMat, A.legL, 0, -0.62, 0.05);
+part(new THREE.BoxGeometry(0.2, 0.1, 0.28), shoeMat, A.legR, 0, -0.62, 0.05);
+
+// торс
+part(new THREE.CapsuleGeometry(0.3, 0.4, 6, 12), clothMat, A.body, 0, 1.12, 0);
+
+// руки
+A.armL = limb(A.body, 0.42, 1.45, new THREE.CapsuleGeometry(0.1, 0.3, 4, 8), clothMat, -0.25);
+A.armR = limb(A.body, -0.42, 1.45, new THREE.CapsuleGeometry(0.1, 0.3, 4, 8), clothMat, -0.25);
+part(new THREE.SphereGeometry(0.11, 12, 10), skinMat, A.armL, 0, -0.52, 0);
+part(new THREE.SphereGeometry(0.11, 12, 10), skinMat, A.armR, 0, -0.52, 0);
+
+// голова
+A.head = new THREE.Group();
+A.head.position.set(0, 1.85, 0);
+A.body.add(A.head);
+part(new THREE.SphereGeometry(0.5, 24, 18), skinMat, A.head, 0, 0, 0);
+part(new THREE.SphereGeometry(0.53, 22, 16, 0, Math.PI * 2, 0, Math.PI * 0.55), hairMat, A.head, 0, 0.04, -0.03);
+const fringe = part(new THREE.SphereGeometry(0.2, 14, 10), hairMat, A.head, 0, 0.3, 0.36);
+fringe.scale.set(1.6, 0.6, 0.7);
+
+// глаза (большие, с бликом)
+function makeEye(x) {
+  const eye = part(new THREE.SphereGeometry(0.15, 16, 12), eyeWhite, A.head, x, 0.02, 0.44);
+  part(new THREE.SphereGeometry(0.085, 12, 10), pupilMat, eye, 0, -0.01, 0.1, false);
+  part(new THREE.SphereGeometry(0.03, 8, 6), eyeWhite, eye, 0.04, 0.05, 0.16, false);
+  return eye;
+}
+A.eyeL = makeEye(-0.2);
+A.eyeR = makeEye(0.2);
+
+// щёчки и рот
+part(new THREE.SphereGeometry(0.09, 10, 8), cheekMat, A.head, -0.31, -0.08, 0.38, false).scale.set(1, 0.7, 0.5);
+part(new THREE.SphereGeometry(0.09, 10, 8), cheekMat, A.head, 0.31, -0.08, 0.38, false).scale.set(1, 0.7, 0.5);
+part(new THREE.SphereGeometry(0.08, 12, 8), mouthMat, A.head, 0, -0.2, 0.47, false).scale.set(1.5, 0.5, 0.6);
+
+// ====== Ползунки аватара ======
+const S = {};
+function applyAvatar() {
+  A.root.scale.setScalar(S.h);
+  A.head.scale.setScalar(S.head);
+  skinMat.color.setHSL(S.skin / 360, 0.5, 0.74);
+  hairMat.color.setHSL(S.hair / 360, 0.5, 0.28);
+  clothMat.color.setHSL(S.cloth / 360, 0.6, 0.52);
+}
+
+['h', 'head', 'eye', 'skin', 'hair', 'cloth'].forEach(key => {
+  const el = document.getElementById('s_' + key);
+  const out = document.getElementById('v_' + key);
+  const upd = () => {
+    S[key] = parseFloat(el.value);
+    const isScale = key === 'h' || key === 'head' || key === 'eye';
+    out.textContent = isScale ? S[key].toFixed(2) : Math.round(S[key]) + '°';
+    applyAvatar();
+  };
+  el.addEventListener('input', upd);
+  upd();
+});
+
+// Анимация аватара: дыхание, покачивание, моргание
+function animateAvatar(t) {
+  A.body.position.y = Math.sin(t * 2) * 0.02;
+  A.armL.rotation.set(Math.sin(t * 1.6) * 0.1, 0, 0.12);
+  A.armR.rotation.set(-Math.sin(t * 1.6) * 0.1, 0, -0.12);
+  A.head.rotation.y = Math.sin(t * 0.6) * 0.2;
+  const blink = (t % 3.6) < 0.14 ? 0.12 : 1;
+  const e = S.eye;
+  A.eyeL.scale.set(e, e * blink, e);
+  A.eyeR.scale.set(e, e * blink, e);
 }
 
 // ====== Камера: вращение, зум ======
-const target = new THREE.Vector3(0, 4.6, 0);
-let theta = 0.6, phi = 1.15, radius = 24;
+const target = new THREE.Vector3(0, 3, 0.2);
+let theta = 0, phi = 1.3, radius = 17;
 
 function updateCamera() {
   const sp = Math.sin(phi);
@@ -483,7 +498,6 @@ function updateCamera() {
 
 const canvas = renderer.domElement;
 const pointers = new Map();
-let downInfo = null;
 let pinchDist = 0;
 const dist2 = () => {
   const [a, b] = [...pointers.values()];
@@ -493,75 +507,43 @@ const dist2 = () => {
 canvas.addEventListener('pointerdown', e => {
   canvas.setPointerCapture(e.pointerId);
   pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-  if (pointers.size === 1) downInfo = { x: e.clientX, y: e.clientY, t: performance.now(), moved: 0 };
   if (pointers.size === 2) pinchDist = dist2();
 });
-
 canvas.addEventListener('pointermove', e => {
   if (!pointers.has(e.pointerId)) return;
   const prev = pointers.get(e.pointerId);
   pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
   if (pointers.size === 1) {
-    const dx = e.clientX - prev.x, dy = e.clientY - prev.y;
-    theta -= dx * 0.008;
-    phi = clamp(phi - dy * 0.006, 0.25, 1.45);
-    if (downInfo) downInfo.moved += Math.hypot(dx, dy);
+    theta -= (e.clientX - prev.x) * 0.008;
+    phi = Math.min(1.5, Math.max(0.6, phi - (e.clientY - prev.y) * 0.006));
   } else if (pointers.size === 2) {
     const d = dist2();
-    if (d > 0) radius = clamp(radius * (pinchDist / d), 8, 45);
+    if (d > 0) radius = Math.min(40, Math.max(7, radius * (pinchDist / d)));
     pinchDist = d;
   }
 });
-
 function endPointer(e) {
-  const wasSingle = pointers.size === 1;
   pointers.delete(e.pointerId);
-  if (wasSingle && downInfo && downInfo.moved < 8 && performance.now() - downInfo.t < 500) {
-    handleTap(e.clientX, e.clientY);
-  }
-  if (pointers.size === 0) downInfo = null;
 }
 canvas.addEventListener('pointerup', endPointer);
 canvas.addEventListener('pointercancel', endPointer);
-canvas.addEventListener('contextmenu', e => e.preventDefault());
-
 canvas.addEventListener('wheel', e => {
   e.preventDefault();
-  radius = clamp(radius * (1 + e.deltaY * 0.001), 8, 45);
+  radius = Math.min(40, Math.max(7, radius * (1 + e.deltaY * 0.001)));
 }, { passive: false });
+canvas.addEventListener('contextmenu', e => e.preventDefault());
 
-// ====== Клик по аватару и меню ======
-const ray = new THREE.Raycaster();
-const ndc = new THREE.Vector2();
-const menu = document.getElementById('menu');
-const mTitle = document.getElementById('mTitle');
-const bCall = document.getElementById('bCall');
-const bWa = document.getElementById('bWa');
-const bTg = document.getElementById('bTg');
-const bClose = document.getElementById('bClose');
-
-function handleTap(x, y) {
-  ndc.set((x / innerWidth) * 2 - 1, -(y / innerHeight) * 2 + 1);
-  ray.setFromCamera(ndc, camera);
-  const hit = ray.intersectObjects(scene.children, true).find(h => !h.object.userData.noPick);
-  if (!hit) return;
-  let o = hit.object;
-  while (o && !o.userData.avatar) o = o.parent;
-  if (o) openMenu(o.userData.avatar);
-}
-
-function openMenu(av) {
-  mTitle.textContent = `${av.name} · ${av.room}`;
-  bCall.href = `tel:${CONTACT.phone}`;
-  bWa.href = `https://wa.me/${CONTACT.whatsapp}`;
-  bTg.href = `https://t.me/${CONTACT.telegram}`;
-  menu.style.display = 'flex';
-}
-function closeMenu() {
-  menu.style.display = 'none';
-}
-bClose.addEventListener('click', closeMenu);
-menu.addEventListener('click', e => { if (e.target === menu) closeMenu(); });
+// ====== Панель: свернуть / развернуть ======
+const panel = document.getElementById('panel');
+const toggle = document.getElementById('toggle');
+document.getElementById('hide').onclick = () => {
+  panel.style.display = 'none';
+  toggle.style.display = 'block';
+};
+toggle.onclick = () => {
+  panel.style.display = 'block';
+  toggle.style.display = 'none';
+};
 
 // ====== Ресайз ======
 window.addEventListener('resize', () => {
@@ -570,23 +552,18 @@ window.addEventListener('resize', () => {
   renderer.setSize(innerWidth, innerHeight);
 });
 
-// ====== Цикл анимации ======
+// ====== Цикл ======
 const clock = new THREE.Clock();
-function animate() {
-  requestAnimationFrame(animate);
-  const dt = Math.min(clock.getDelta(), 0.05);
+function frame() {
+  requestAnimationFrame(frame);
   const t = clock.elapsedTime;
-
-  avatars.forEach(av => updateAvatar(av, dt, t));
-
-  tvMat.emissive.setHSL(0.6 + Math.sin(t * 0.4) * 0.05, 0.7, 0.35);
-  tvMat.emissiveIntensity = 0.7 + Math.sin(t * 6) * 0.15;
-
+  animateAvatar(t);
+  tvScreens.forEach(m => m.color.setHSL(0.56 + Math.sin(t * 0.6) * 0.04, 0.75, 0.55 + Math.sin(t * 2) * 0.05));
   updateCamera();
   renderer.render(scene, camera);
 }
 updateCamera();
-animate();
+frame();
 </script>
 </body>
 </html>
